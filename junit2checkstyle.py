@@ -27,8 +27,11 @@ if __name__ == "__main__":
             element.setAttribute('name', filename)
             top_element.appendChild(element)
             files[filename] = element
+        try:
+            in_error = e.getElementsByTagName('failure')[0]
+        except IndexError:
+            continue
 
-        in_error = e.getElementsByTagName('failure')[0]
         f, line, column, message = in_error.getAttribute('message').split(':')
         type = in_error.getAttribute('type')
         out_error = output.createElement("error")
@@ -36,7 +39,7 @@ if __name__ == "__main__":
         out_error.setAttribute('column', column)
         out_error.setAttribute('severity', 'error')
         out_error.setAttribute('message', message)
-        out_error.setAttribute('source', type)
+        out_error.setAttribute('source', "lua.rules.%s" % type)
 
         element.appendChild(out_error)
 
