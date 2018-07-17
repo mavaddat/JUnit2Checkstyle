@@ -2,7 +2,7 @@
 
 import argparse
 from xml.dom import minidom
-
+from xml.parsers.expat import ExpatError
 
 if __name__ == "__main__":
 
@@ -11,7 +11,12 @@ if __name__ == "__main__":
     parser.add_argument("output", type=argparse.FileType('w'))
     args = parser.parse_args()
 
-    input = minidom.parse(args.input)
+    try:
+        input = minidom.parse(args.input)
+    except ExpatError:
+        print "%s cannot be correctly parsed" % args.input
+        exit(1)
+
     impl = minidom.getDOMImplementation()
     output = impl.createDocument(None, "checkstyle", None)
     errors = input.getElementsByTagName('testcase')
