@@ -37,7 +37,11 @@ if __name__ == "__main__":
         out_error = output.createElement("error")
         out_error.setAttribute('line', line)
         out_error.setAttribute('column', column)
-        out_error.setAttribute('severity', 'error')
+        if type[0] == "E":  # check if there is an error or a warning
+            severity = "error"
+        else:
+            severity = "warning"
+        out_error.setAttribute('severity', severity)
         out_error.setAttribute('message', message)
         out_error.setAttribute('source', "lua.rules.%s" % type)
 
