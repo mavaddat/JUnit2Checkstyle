@@ -1,35 +1,14 @@
 #!/usr/bin/env python
 
-import os
 import argparse
 from xml.dom import minidom
-
-
-def prompt(question):
-    while True:
-        reply = str(raw_input(question + '(y/n): ')).lower().strip()
-        if reply[:1] == 'y':
-            return True
-        elif reply[:1] == 'n':
-            return False
-
-
-def not_existing_file(filename):
-    if not os.path.isfile(filename):
-        return filename
-    else:
-        print("%s already exists" % filename)
-        if prompt("Overwrite?"):
-            return open(filename, 'w')
-        else:
-            exit(0)
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=argparse.FileType('r'))
-    parser.add_argument("output", type=not_existing_file)
+    parser.add_argument("output", type=argparse.FileType('w'))
     args = parser.parse_args()
 
     input = minidom.parse(args.input)
