@@ -11,6 +11,22 @@ def is_processed(suite_name, append):
     return False
 
 
+def backup_filename(file):
+    return "%s.tmp" % file
+
+
+def save(file, dom):
+    if os.path.isfile(file):
+        bkp = backup_filename(file)
+        shutil.copy2(file, bkp)
+        print "%s backed up to %s" % (file, bkp)
+    else:
+        print "%s does not exits. Indicate an existing file!" % file
+        exit(1)
+    with open(file, 'w') as f:
+        dom.writexml(f)
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="This script aims to append some tokens at the end of test suite names within JUnit XML files.")
@@ -25,16 +41,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.revert:
-        shutil.copy2(args.file + ".tmp", args.file)
-        print "%s restored to %s" % (args.file + ".tmp", args.file)
-        print "No more actions will be done"
-    else:
-        if os.path.isfile(args.file):
-            shutil.copy2(args.file, args.file + ".tmp")
-            print "%s backed up to %s" % (args.file, args.file + ".tmp")
+        bkp = backup_filename(args.file)
+        if os.path.isfile(bkp):
+            shutil.copy2(bkp, args.file)
+            print "%s restored to %s" % (bkp, args.file)
+            print "No more actions will be done"
         else:
-            print "%s does not exits. Indicate an existing file!" % args.file
-            exit(1)
+            print "No backup file found"
+        exit(0)
+    else:
         dom = minidom.parse(args.file)
         if args.type == "lua":
             for e in dom.getElementsByTagName("testcase"):
@@ -45,8 +60,6 @@ if __name__ == "__main__":
                 e.setAttribute("classname", suite_tgt)
                 test_name = e.getAttribute("name")
                 e.setAttribute("name", test_name.replace(suite_name, suite_tgt))
-            with open(args.file, 'w') as f:
-                dom.writexml(f)
         elif args.type == "googletest":
             for e in dom.getElementsByTagName("testsuite"):
                 suite_name = e.getAttribute("name")
@@ -56,12 +69,10 @@ if __name__ == "__main__":
                 e.setAttribute("name", suite_tgt)
                 for case in e.getElementsByTagName("testcase"):
                     case.setAttribute("classname", suite_tgt)
-            with open(args.file, 'w') as f:
-                dom.writexml(f)
         else:
             print "Wrong type. Cannot determine action to do. Select an admissible type between lua|googletest"
             exit(1)
+
+        save(args.file, dom)
         print "%s appended to every test suite reference within %s" % (args.append, args.file)
-    exit(0)
-
-
+        exit(0)
