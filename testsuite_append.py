@@ -7,7 +7,7 @@ import re
 
 def is_processed(suite_name, append):
     if suite_name.endswith(append):
-        print "File has already been processed with %s" % append
+        print("File has already been processed with %s" % append)
         return True
     return False
 
@@ -20,9 +20,9 @@ def save(file, dom):
     if os.path.isfile(file):
         bkp = backup_filename(file)
         shutil.copy2(file, bkp)
-        print "%s backed up to %s" % (file, bkp)
+        print("%s backed up to %s" % (file, bkp))
     else:
-        print "%s does not exits. Indicate an existing file!" % file
+        print("%s does not exist. Indicate an existing file!" % file)
         exit(1)
     with open(file, 'w') as f:
         dom.writexml(f)
@@ -45,18 +45,18 @@ if __name__ == "__main__":
         bkp = backup_filename(args.file)
         if os.path.isfile(bkp):
             shutil.copy2(bkp, args.file)
-            print "%s restored to %s" % (bkp, args.file)
-            print "No more actions will be done"
+            print("%s restored to %s" % (bkp, args.file))
+            print("No more actions will be done")
         else:
-            print "No backup file found"
+            print("No backup file found")
         exit(0)
     else:
         if args.token is None:
             try:
                 token = re.search("\w*_(\w*)(.\w*)?(?!\S)", args.file).group(1)
-                print "Auto-detected token: %s" % token
+                print("Auto-detected token: %s" % token)
             except AttributeError:
-                print "Unable to autodetermine token to append. Please provide a token with --token option."
+                print("Unable to autodetermine token to append. Please provide a token with --token option.")
                 exit(1)
         else:
             token = args.token
@@ -84,9 +84,9 @@ if __name__ == "__main__":
                 for case in e.getElementsByTagName("testcase"):
                     case.setAttribute("classname", suite_tgt)
         else:
-            print "Wrong type. Cannot determine action to do. Select an admissible type between lua|googletest"
+            print("Wrong type. Cannot determine action to do. Select an admissible type between lua|googletest")
             exit(1)
 
         save(args.file, dom)
-        print "%s appended to every test suite reference within %s" % (token, args.file)
+        print("%s appended to every test suite reference within %s" % (token, args.file))
         exit(0)

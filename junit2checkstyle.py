@@ -1,34 +1,67 @@
 #!/usr/bin/env python
 
-import argparse
+import sys
+import re
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
+CHECKSTYLE_VERSION = '5.0'
+
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("input", type=argparse.FileType('r'))
-    parser.add_argument("output", type=argparse.FileType('w'))
-    args = parser.parse_args()
+    # If "--verbose" or "-v" is passed, set verbose to True
+    verbose = True if '--verbose' in sys.argv or '-v' in sys.argv else False
 
+    # Get the index of "--input|-i" in argv
+    input_index = [i for i, arg in enumerate(sys.argv) if re.match('--input|-i', arg)]
+
+    if len(input_index) == 0:
+        print("No input file specified")
+        sys.exit(1)
+
+    # Get the index of "--output|-o" in argv
+    output_index = [i for i, arg in enumerate(sys.argv) if re.match('--output|-o', arg)]
+
+    if len(output_index) == 0:
+        print("No output file specified")
+        sys.exit(1)
+
+    input_file = sys.argv[input_index[0] + 1]
+    output_file = sys.argv[output_index[0] + 1]
+    if verbose:
+        print(f"Input file: {input_file}")
+        print(f"Output file: {output_file}")
+    # Open the input file
     try:
-        input = minidom.parse(args.input)
+        input_file = open(input_file, 'r')
+        input_xml = minidom.parse(input_file)
+        input_file.close()
+    except IOError:
+        print("Cannot open input file")
+        sys.exit(1)
     except ExpatError:
-        print "%s cannot be correctly parsed" % args.input
-        exit(1)
+        print("Invalid XML file as input")
+        sys.exit(1)
+
+    # Open the output file
+    try:
+        output_file = open(output_file, 'w')
+    except IOError:
+        print("Cannot create output file")
+        sys.exit(1)
 
     impl = minidom.getDOMImplementation()
-    output = impl.createDocument(None, "checkstyle", None)
-    errors = input.getElementsByTagName('testcase')
-    top_element = output.documentElement
-    top_element.setAttribute("version", "4.3")
+    output_xml = impl.createDocument(None, "checkstyle", None)
+    errors = input_xml.getElementsByTagName('testcase')
+    top_element = output_xml.documentElement
+    top_element.setAttribute("version", "9.3")
     files = {}
     for e in errors:
         filename = e.getAttribute('classname')
         if filename in files.keys():
             element = files[filename]
         else:
-            element = output.createElement('file')
+            element = output_xml.createElement('file')
             element.setAttribute('name', filename)
             top_element.appendChild(element)
             files[filename] = element
@@ -39,7 +72,7 @@ if __name__ == "__main__":
 
         f, line, column, message = in_error.getAttribute('message').split(':')
         type = in_error.getAttribute('type')
-        out_error = output.createElement("error")
+        out_error = output_xml.createElement("error")
         out_error.setAttribute('line', line)
         out_error.setAttribute('column', column)
         if type[0] == "E":  # check if there is an error or a warning
@@ -51,8 +84,5 @@ if __name__ == "__main__":
         out_error.setAttribute('source', "lua.rules.%s" % type)
 
         element.appendChild(out_error)
-
-    args.output.write(output.toprettyxml(encoding='utf-8'))
-
-    args.input.close()
-    args.output.close()
+    output_file.write(output_xml.toprettyxml(encoding='utf-8'))
+    output_file.close()
