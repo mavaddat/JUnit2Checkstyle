@@ -1,4 +1,4 @@
-# JUnit2Checkstyle
+# JUnit ➡️ Checkstyle
 
 Simple python script that converts a JUnit XML to a Checkstyle XML. 
 
